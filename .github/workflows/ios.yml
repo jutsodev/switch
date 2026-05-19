@@ -1,0 +1,86 @@
+name: Build iOS
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    name: Build unsigned IPA
+    runs-on: macos-14
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show available Xcode versions
+        run: ls /Applications | grep -i Xcode || true
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app || sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Print Xcode version
+        run: xcodebuild -version
+
+      - name: Install XcodeGen
+        run: |
+          if ! command -v xcodegen >/dev/null 2>&1; then
+            brew install xcodegen
+          fi
+          xcodegen --version
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build app (unsigned, iphoneos)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project Switch.xcodeproj \
+            -scheme Switch \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=NO \
+            clean build | tee xcodebuild.log
+
+      - name: Package unsigned IPA
+        run: |
+          set -e
+          APP_PATH="$(find build/Build/Products/Release-iphoneos -name '*.app' -maxdepth 2 | head -n1)"
+          if [ -z "$APP_PATH" ]; then
+            echo "No .app found in build products"
+            ls -lR build/Build/Products || true
+            exit 1
+          fi
+          echo "Packaging $APP_PATH"
+          rm -rf Payload
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -qry Switch-unsigned.ipa Payload
+          ls -lh Switch-unsigned.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Switch-unsigned-ipa
+          path: Switch-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload xcodebuild log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log
+          path: xcodebuild.log
+          if-no-files-found: ignore
+          retention-days: 7
