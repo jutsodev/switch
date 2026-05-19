@@ -14,8 +14,12 @@ jobs:
   
     name: Build IPA
     
-    runs-on: macos-latest
+    runs-on: macos-14
     
+    env:
+    
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      
     steps:
     
       - name: Checkout repository
@@ -36,7 +40,7 @@ jobs:
         
         with:
         
-          xcode-version: '15.4'
+          xcode-version: '15.3'
           
       - name: Build Archive
       
@@ -86,6 +90,8 @@ jobs:
           
           retention-days: 7
           
+
+
 
 
 
