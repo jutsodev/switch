@@ -4,12 +4,14 @@ import SwiftUI
 struct SwitchProfessionalApp: App {
     @StateObject private var appState = SwitchAppState()
     @StateObject private var apiClient = SwitchAIClient()
+    @StateObject private var coreEngine = SwitchCoreEngine.shared
 
     var body: some Scene {
         WindowGroup {
-            SwitchRootView()
+            SwitchRootViewV2()
                 .environmentObject(appState)
                 .environmentObject(apiClient)
+                .environmentObject(coreEngine)
                 .preferredColorScheme(.dark)
         }
     }
