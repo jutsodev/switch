@@ -119,7 +119,7 @@ struct HeroPanel: View {
                 }
             }
         }
-        .shimmer()
+        .premiumShimmer()
     }
 }
 
@@ -161,7 +161,7 @@ struct SwitchMessageBubble: View {
                     .padding(.vertical, 12)
                     .background(
                         RoundedRectangle(cornerRadius: 22, style: .continuous)
-                            .fill(message.isUser ? SwitchPalette.blue.opacity(0.78) : Color.white.opacity(0.075))
+                            .fill(message.isUser ? SwitchPalette.electricBlue.opacity(0.78) : Color.white.opacity(0.075))
                             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
                     )
                     .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.white.opacity(message.isUser ? 0.22 : 0.12), lineWidth: 1))
